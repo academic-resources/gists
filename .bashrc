@@ -57,7 +57,7 @@ if [ -n "$force_color_prompt" ]; then
 fi
 
 if [ "$color_prompt" = yes ]; then
-    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+   PS1="\[\033[m\]|\[\033[1;35m\]\t\[\033[m\]|\[\e[1;31m\]\u\[\e[1;36m\]\[\033[m\]@\[\e[1;36m\]\h\[\033[m\]:\[\e[0m\]\[\e[1;32m\][\W]\[\033[1;31m\] \W_exitstatus:\$?\[\033[00m\]__________________________________________________________o>\n\n"
 else
     PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
 fi
@@ -100,96 +100,6 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo
 # You may want to put all your additions into a separate file like
 # ~/.bash_aliases, instead of adding them here directly.
 # See /usr/share/doc/bash-doc/examples in the bash-doc package.
-
-if [ -f ~/.bash_aliases ]; then
-    . ~/.bash_aliases
-fi
-
-# enable programmable completion features (you don't need to enable
-# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
-# sources /etc/bash.bashrc).
-if ! shopt -oq posix; then
-  if [ -f /usr/share/bash-completion/bash_completion ]; then
-    . /usr/share/bash-completion/bash_completion
-  elif [ -f /etc/bash_completion ]; then
-    . /etc/bash_completion
-  fi
-fi
-
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-# ------------------------------------------------------------------------------
-# ---- controls what displays on every line of terminal that is not the output log-----------
-#--- the \W outputs the current working directory
-# ------------------------------------------------------------------------------
-export PS1="\n\___________________________________________________\n\u_dir:\W_exitstatus:\$?\[$(tput sgr0)\] ====>\n\n"
-#--------------------function that ls's every time I cd into a new directory-----------
-#   i.e.)       home ====>cd ..
-#bin   dev  home  lib    lib64   lost+found  mnt  proc  run   snap  sys  usr
-#boot  etc  init  lib32  libx32  media       opt  root  sbin  srv   tmp  var
-#/ ====>
-#------------------------------------------------------------------------------------------------
-function cd {
-    if [ -z "$1" ]; then
-        builtin cd
-    else
-        builtin cd "$1"
-    fi
-    if [ $? -eq 0 ]; then
-    printf '\n'
-        ls
-    fi
-}
-#------------------------------------------------------------------------------------------------
-
-
-
-
-# uncomment for a colored prompt, if the terminal has the capability; turned
-# off by default to not distract the user: the focus in a terminal window
-# should be on the output of commands, not on the prompt
-#force_color_prompt=yes
-
-if [ -n "$force_color_prompt" ]; then
-    if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-	# We have color support; assume it's compliant with Ecma-48
-	# (ISO/IEC-6429). (Lack of such support is extremely rare, and such
-	# a case would tend to support setf rather than setaf.)
-	color_prompt=yes
-    else
-	color_prompt=
-    fi
-fi
-
-if [ "$color_prompt" = yes ]; then
-    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
-else
-    PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
-fi
-unset color_prompt force_color_prompt
-
-# If this is an xterm set the title to user@host:dir
-case "$TERM" in
-xterm*|rxvt*)
-    PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
-    ;;
-*)
-    ;;
-esac
-
-# enable color support of ls and also add handy aliases
-if [ -x /usr/bin/dircolors ]; then
-    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
-    alias ls='ls --color=auto'
-    #alias dir='dir --color=auto'
-    #alias vdir='vdir --color=auto'
-
-    alias grep='grep --color=auto'
-    alias fgrep='fgrep --color=auto'
-    alias egrep='egrep --color=auto'
-fi
-
 # ------------------------------------------------------------------------------
 # ---------------------------- general shortcuts--------------------------------
 # ------------------------------------------------------------------------------
@@ -309,237 +219,91 @@ alias unzipa='find . -name "*.zip" | while read filename; do unzip -o -d "`dirna
 
 alias run='./manage.py runserver 0.0.0.0:8000'
 alias syncdb='./manage.py syncdb'
-
-bind '"\e[A": history-search-backward'
-bind '"\e[B": history-search-forward'
-
-# The various escape codes that we can use to color our prompt.
-        RED="\[\033[0;31m\]"
-     YELLOW="\[\033[1;33m\]"
-      GREEN="\[\033[0;32m\]"
-       BLUE="\[\033[1;34m\]"
-  LIGHT_RED="\[\033[1;31m\]"
-LIGHT_GREEN="\[\033[1;32m\]"
-      WHITE="\[\033[1;37m\]"
- LIGHT_GRAY="\[\033[0;37m\]"
- COLOR_NONE="\[\e[0m\]"
-
-# Detect whether the current directory is a git repository.
-function is_git_repository {
-  git branch > /dev/null 2>&1
-}
-
-# Determine the branch/state information for this git repository.
-function set_git_branch {
-  # Capture the output of the "git status" command.
-  git_status="$(git status 2> /dev/null)"
-
-  # Set color based on clean/staged/dirty.
-  if [[ ${git_status} =~ "working directory clean" ]]; then
-    state="${GREEN}"
-  elif [[ ${git_status} =~ "Changes to be committed" ]]; then
-    state="${YELLOW}"
-  else
-    state="${LIGHT_RED}"
-  fi
-
-  # Set arrow icon based on status against remote.
-  remote_pattern="# Your branch is (.*) of"
-  if [[ ${git_status} =~ ${remote_pattern} ]]; then
-    if [[ ${BASH_REMATCH[1]} == "ahead" ]]; then
-      remote="↑"
-    else
-      remote="↓"
-    fi
-  else
-    remote=""
-  fi
-  diverge_pattern="# Your branch and (.*) have diverged"
-  if [[ ${git_status} =~ ${diverge_pattern} ]]; then
-    remote="↕"
-  fi
-
-  # Get the name of the branch.
-  branch_pattern="^# On branch ([^${IFS}]*)"
-  if [[ ${git_status} =~ ${branch_pattern} ]]; then
-    branch=${BASH_REMATCH[1]}
-  fi
-
-  # Set the final branch string.
-  BRANCH="${state}(${branch})${remote}${COLOR_NONE} "
-}
-
-# Return the prompt symbol to use, colorized based on the return value of the
-# previous command.
-function set_prompt_symbol () {
-  if test $1 -eq 0 ; then
-      PROMPT_SYMBOL="\$"
-  else
-      PROMPT_SYMBOL="${LIGHT_RED}\$${COLOR_NONE}"
-  fi
-}
-
-# Determine active Python virtualenv details.
-function set_virtualenv () {
-  if test -z "$VIRTUAL_ENV" ; then
-      PYTHON_VIRTUALENV=""
-  else
-      PYTHON_VIRTUALENV="${BLUE}[`basename \"$VIRTUAL_ENV\"`]${COLOR_NONE} "
-  fi
-}
-
-# Set the full bash prompt.
-function set_bash_prompt () {
-  # Set the PROMPT_SYMBOL variable. We do this first so we don't lose the
-  # return value of the last command.
-  set_prompt_symbol $?
-
-  # Set the PYTHON_VIRTUALENV variable.
-  set_virtualenv
-
-  # Set the BRANCH variable.
-  if is_git_repository ; then
-    set_git_branch
-  else
-    BRANCH=''
-  fi
-
-  # Set the bash prompt variable.
-  PS1="
-${LIGHT_GREEN}\u@\h ${COLOR_NONE}${PYTHON_VIRTUALENV}${BRANCH}${YELLOW}\w${COLOR_NONE}
-${PROMPT_SYMBOL} "
-}
+alias numFiles='echo $(ls -1 | wc -l)'       # numFiles:     Count of non-hidden files in current dir
+alias make1mb='truncate -s 1m ./1MB.dat'     # make1mb:      Creates a file of 1mb size (all zeros)
+alias make5mb='truncate -s 5m ./5MB.dat'     # make5mb:      Creates a file of 5mb size (all zeros)
+alias make10mb='truncate -s 10m ./10MB.dat'  # make10mb:     Creates a file of 10mb size (all zeros)
 
 
+#   ---------------------------
+#   2.  SEARCHING
+#   ---------------------------
+
+alias qfind="find . -name "                 # qfind:    Quickly search for file
 
 
-##-------------------------------------
-if type complete &>/dev/null; then
-  _npm_completion () {
-    local words cword
-    if type _get_comp_words_by_ref &>/dev/null; then
-      _get_comp_words_by_ref -n = -n @ -n : -w words -i cword
-    else
-      cword="$COMP_CWORD"
-      words=("${COMP_WORDS[@]}")
-    fi
+#   ---------------------------
+#   3.  PROCESS MANAGEMENT
+#   ---------------------------
 
-    local si="$IFS"
-    IFS=$'\n' COMPREPLY=($(COMP_CWORD="$cword" \
-                           COMP_LINE="$COMP_LINE" \
-                           COMP_POINT="$COMP_POINT" \
-                           npm completion -- "${words[@]}" \
-                           2>/dev/null)) || return $?
-    IFS="$si"
-    if type __ltrim_colon_completions &>/dev/null; then
-      __ltrim_colon_completions "${words[cword]}"
-    fi
-  }
-  complete -o default -F _npm_completion npm
-elif type compdef &>/dev/null; then
-  _npm_completion() {
-    local si=$IFS
-    compadd -- $(COMP_CWORD=$((CURRENT-1)) \
-                 COMP_LINE=$BUFFER \
-                 COMP_POINT=0 \
-                 npm completion -- "${words[@]}" \
-                 2>/dev/null)
-    IFS=$si
-  }
-  compdef _npm_completion npm
-elif type compctl &>/dev/null; then
-  _npm_completion () {
-    local cword line point words si
-    read -Ac words
-    read -cn cword
-    let cword-=1
-    read -l line
-    read -ln point
-    si="$IFS"
-    IFS=$'\n' reply=($(COMP_CWORD="$cword" \
-                       COMP_LINE="$line" \
-                       COMP_POINT="$point" \
-                       npm completion -- "${words[@]}" \
-                       2>/dev/null)) || return $?
-    IFS="$si"
-  }
-  compctl -K _npm_completion npm
+#   memHogsTop, memHogsPs:  Find memory hogs
+#   -----------------------------------------------------
+    alias memHogsTop='top -l 1 -o rsize | head -20'
+    alias memHogsPs='ps wwaxm -o pid,stat,vsize,rss,time,command | head -10'
+
+#   cpuHogs:  Find CPU hogs
+#   -----------------------------------------------------
+    alias cpu_hogs='ps wwaxr -o pid,stat,%cpu,time,command | head -10'
+
+#   topForever:  Continual 'top' listing (every 10 seconds)
+#   -----------------------------------------------------
+    alias topForever='top -l 9999999 -s 10 -o cpu'
+
+#   ttop:  Recommended 'top' invocation to minimize resources
+#   ------------------------------------------------------------
+#       Taken from this macosxhints article
+#       http://www.macosxhints.com/article.php?story=20060816123853639
+#   ------------------------------------------------------------
+    alias ttop="top -R -F -s 10 -o rsize"
+
+
+#   ---------------------------
+#   4.  NETWORKING
+#   ---------------------------
+
+alias netCons='lsof -i'                                   # netCons:      Show all open TCP/IP sockets
+alias lsock='sudo /usr/sbin/lsof -i -P'                   # lsock:        Display open sockets
+alias lsockU='sudo /usr/sbin/lsof -nP | grep UDP'         # lsockU:       Display only open UDP sockets
+alias lsockT='sudo /usr/sbin/lsof -nP | grep TCP'         # lsockT:       Display only open TCP sockets
+alias ipInfo0='ifconfig getpacket en0'                    # ipInfo0:      Get info on connections for en0
+alias ipInfo1='ifconfig getpacket en1'                    # ipInfo1:      Get info on connections for en1
+alias openPorts='sudo lsof -i | grep LISTEN'              # openPorts:    All listening connections
+alias showBlocked='sudo ipfw list'                        # showBlocked:  All ipfw rules inc/ blocked IPs
+
+
+#   ---------------------------------------
+#   5.  SYSTEMS OPERATIONS & INFORMATION
+#   ---------------------------------------
+
+alias mountReadWrite='/sbin/mount -uw /'    # mountReadWrite:   For use when booted into single-user
+
+
+#   ---------------------------------------
+#   6.  DATE & TIME MANAGEMENT
+#   ---------------------------------------
+
+alias bdate="date '+%a, %b %d %Y %T %Z'"
+alias cal3='cal -3'
+alias da='date "+%Y-%m-%d %A    %T %Z"'
+alias daysleft='echo "There are $(($(date +%j -d"Dec 31, $(date +%Y)")-$(date +%j))) left in year $(date +%Y)."'
+alias epochtime='date +%s'
+alias mytime='date +%H:%M:%S'
+alias secconvert='date -d@1234567890'
+alias stamp='date "+%Y%m%d%a%H%M"'
+alias timestamp='date "+%Y%m%dT%H%M%S"'
+alias today='date +"%A, %B %-d, %Y"'
+alias weeknum='date +%V'
+# Example aliases
+# alias bashconfig="mate ~/.bashrc"
+# alias ohmybash="mate ~/.oh-my-bash"
+# Alias definitions.
+# You may want to put all your additions into a separate file like
+# ~/.bash_aliases, instead of adding them here directly.
+# See /usr/share/doc/bash-doc/examples in the bash-doc package.
+
+if [ -f ~/.bash_aliases ]; then
+    . ~/.bash_aliases
 fi
-###-end-npm-completion-###
-# Install Ruby Gems to ~/gems
-export GEM_HOME="$HOME/gems"
-export PATH="$HOME/gems/bin:$PATH"
-###-begin-npm-completion-###
-#
-# npm command completion script
-#
-# Installation: npm completion >> ~/.bashrc  (or ~/.zshrc)
-# Or, maybe: npm completion > /usr/local/etc/bash_completion.d/npm
-#
-
-if type complete &>/dev/null; then
-  _npm_completion () {
-    local words cword
-    if type _get_comp_words_by_ref &>/dev/null; then
-      _get_comp_words_by_ref -n = -n @ -n : -w words -i cword
-    else
-      cword="$COMP_CWORD"
-      words=("${COMP_WORDS[@]}")
-    fi
-
-    local si="$IFS"
-    IFS=$'\n' COMPREPLY=($(COMP_CWORD="$cword" \
-                           COMP_LINE="$COMP_LINE" \
-                           COMP_POINT="$COMP_POINT" \
-                           npm completion -- "${words[@]}" \
-                           2>/dev/null)) || return $?
-    IFS="$si"
-    if type __ltrim_colon_completions &>/dev/null; then
-      __ltrim_colon_completions "${words[cword]}"
-    fi
-  }
-  complete -o default -F _npm_completion npm
-elif type compdef &>/dev/null; then
-  _npm_completion() {
-    local si=$IFS
-    compadd -- $(COMP_CWORD=$((CURRENT-1)) \
-                 COMP_LINE=$BUFFER \
-                 COMP_POINT=0 \
-                 npm completion -- "${words[@]}" \
-                 2>/dev/null)
-    IFS=$si
-  }
-  compdef _npm_completion npm
-elif type compctl &>/dev/null; then
-  _npm_completion () {
-    local cword line point words si
-    read -Ac words
-    read -cn cword
-    let cword-=1
-    read -l line
-    read -ln point
-    si="$IFS"
-    IFS=$'\n' reply=($(COMP_CWORD="$cword" \
-                       COMP_LINE="$line" \
-                       COMP_POINT="$point" \
-                       npm completion -- "${words[@]}" \
-                       2>/dev/null)) || return $?
-    IFS="$si"
-  }
-  compctl -K _npm_completion npm
-fi
-###-end-npm-completion-###
-function lazygit() {
-    git add .
-    git commit -a -m "$1"
-    git push -u origin master
-}
-
-# PatrickDuncan's bash shell
-[ -f /mnt/c/MY-WEB-DEV/12-ALL-TIME/Bash-Setups/bash_shell-master/main.bash ] && . /mnt/c/MY-WEB-DEV/12-ALL-TIME/Bash-Setups/bash_shell-master/main.bash 
-
-
-
 
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
@@ -552,9 +316,47 @@ if ! shopt -oq posix; then
   fi
 fi
 
-# Include custom bashrc files.
-for i in ~/.config/bashrc/.bashrc_* ; do
-     if [ -r "$i" ]; then
-          . $i
-     fi
-done
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+# ------------------------------------------------------------------------------
+# ---- controls what displays on every line of terminal that is not the output log-----------
+#--- the \W outputs the current working directory
+# ------------------------------------------------------------------------------
+
+#--------------------function that ls's every time I cd into a new directory-----------
+#   i.e.)       home ====>cd ..
+#bin   dev  home  lib    lib64   lost+found  mnt  proc  run   snap  sys  usr
+#boot  etc  init  lib32  libx32  media       opt  root  sbin  srv   tmp  var
+#/ ====>
+#------------------------------------------------------------------------------------------------
+function cd {
+    if [ -z "$1" ]; then
+        builtin cd
+    else
+        builtin cd "$1"
+    fi
+    if [ $? -eq 0 ]; then
+    printf '\n'
+        ls
+    fi
+}
+#------------------------------------------------------------------------------------------------
+
+
+
+
+if [ -f ~/.bash_aliases ]; then
+    . ~/.bash_aliases
+fi
+
+# enable programmable completion features (you don't need to enable
+# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
+# sources /etc/bash.bashrc).
+if ! shopt -oq posix; then
+  if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+  elif [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+  fi
+fi
