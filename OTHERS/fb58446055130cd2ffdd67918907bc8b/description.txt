@@ -1,0 +1,1 @@
+A Firebase function that will create data and return a JWT for the userId to aid with testing

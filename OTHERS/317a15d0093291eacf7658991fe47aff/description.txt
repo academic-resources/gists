@@ -1,0 +1,1 @@
+Update the path when a middle control point is moved

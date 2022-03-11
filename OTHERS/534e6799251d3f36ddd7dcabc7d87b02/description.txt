@@ -1,0 +1,1 @@
+GraphQL code gen config

@@ -1,0 +1,1 @@
+Getting the selected connections based on the edges in a line

@@ -1,0 +1,1 @@
+Gatsby file to create pages from GraphCMS

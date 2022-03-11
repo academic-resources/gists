@@ -1,0 +1,1 @@
+Getting the selected rectangles on the stage
